@@ -1,7 +1,7 @@
 # EcoScan 🌿
 
 **Aplicación móvil web para identificar y clasificar residuos**
-Proyecto académico: GA3-220501101-AA1-EV01
+Proyecto académico
 
 ---
 
@@ -28,25 +28,6 @@ ecoscan/
 ```
 
 ---
-
-## Despliegue rápido
-
-### Netlify (recomendado — gratis)
-1. Crea una cuenta en [netlify.com](https://netlify.com)
-2. Arrastra la carpeta `ecoscan/` al panel de Netlify
-3. ¡Listo! Obtienes una URL pública con HTTPS automático
-
-### Vercel (alternativa — gratis)
-```bash
-npm i -g vercel
-cd ecoscan
-vercel
-```
-
-### GitHub Pages (alternativa — gratis)
-1. Sube el contenido a un repositorio GitHub
-2. En Settings → Pages → selecciona la rama `main`
-3. Accede en `https://[usuario].github.io/[repo]`
 
 ### Servidor propio (Apache)
 1. Copia los archivos al directorio raíz del servidor
