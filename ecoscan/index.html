@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="EcoScan - Identifica residuos con tu cámara y aprende a reciclar correctamente">
+  <meta name="theme-color" content="#1B5E20">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+  <meta name="robots" content="index, follow">
+  <title>EcoScan — Recicla inteligente</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <div id="app">
+
+    <!-- ===== SPLASH SCREEN ===== -->
+    <div id="screen-splash" class="screen active" role="main" aria-label="Pantalla de carga EcoScan">
+      <div class="splash-bg"></div>
+      <div class="splash-content">
+        <div class="logo-mark" aria-hidden="true">
+          <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="36" cy="36" r="36" fill="#2E7D32"/>
+            <path d="M22 38C22 30 28 24 36 24C40 24 43.5 25.5 46 28L50 24" stroke="#A5D6A7" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+            <path d="M50 24L46 32H54L50 24Z" fill="#A5D6A7"/>
+            <path d="M50 34C50 42 44 48 36 48C32 48 28.5 46.5 26 43.5L22 47.5" stroke="#A5D6A7" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+            <path d="M22 47.5L26 39.5H18L22 47.5Z" fill="#A5D6A7"/>
+            <circle cx="36" cy="36" r="4" fill="#A5D6A7"/>
+          </svg>
+        </div>
+        <h1 class="logo-text">EcoScan</h1>
+        <p class="logo-tagline">Recicla con inteligencia</p>
+        <div class="splash-loader" aria-label="Cargando...">
+          <div class="loader-bar"></div>
+        </div>
+      </div>
+      <p class="splash-version">v1.0.0 · GA3-220501101-AA1-EV01</p>
+    </div>
+
+    <!-- ===== PANTALLA 1: INICIO ===== -->
+    <div id="screen-home" class="screen" role="main" aria-label="Pantalla de inicio">
+      <header class="app-header" role="banner">
+        <div class="header-inner">
+          <div class="header-logo" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="36" cy="36" r="36" fill="#2E7D32"/>
+              <path d="M22 38C22 30 28 24 36 24C40 24 43.5 25.5 46 28L50 24" stroke="#A5D6A7" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+              <path d="M50 24L46 32H54L50 24Z" fill="#A5D6A7"/>
+              <path d="M50 34C50 42 44 48 36 48C32 48 28.5 46.5 26 43.5L22 47.5" stroke="#A5D6A7" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+              <path d="M22 47.5L26 39.5H18L22 47.5Z" fill="#A5D6A7"/>
+              <circle cx="36" cy="36" r="4" fill="#A5D6A7"/>
+            </svg>
+            <span>EcoScan</span>
+          </div>
+          <button class="btn-icon" id="btn-stats" aria-label="Ver estadísticas">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="home-content">
+        <section class="home-hero" aria-labelledby="hero-heading">
+          <div class="hero-text">
+            <div class="hero-badge">
+              <span class="badge-dot" aria-hidden="true"></span>
+              IA lista para escanear
+            </div>
+            <h2 id="hero-heading">Identifica<br>cualquier<br><em>residuo</em></h2>
+            <p class="hero-sub">Apunta tu cámara y descubre cómo reciclarlo correctamente en segundos.</p>
+          </div>
+          <div class="hero-visual" aria-hidden="true">
+            <div class="phone-preview">
+              <div class="phone-screen">
+                <div class="scan-frame">
+                  <div class="corner tl"></div><div class="corner tr"></div>
+                  <div class="corner bl"></div><div class="corner br"></div>
+                  <div class="scan-line"></div>
+                </div>
+                <div class="material-badge-preview">PET</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <button class="btn-scan-main" id="btn-scan" aria-label="Iniciar escaneo de residuo">
+          <span class="btn-scan-icon" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+          </span>
+          <span>Escanear residuo</span>
+        </button>
+
+        <section class="stats-row" aria-label="Estadísticas de reciclaje">
+          <div class="stat-card">
+            <span class="stat-number" id="stat-scanned">0</span>
+            <span class="stat-label">Residuos<br>escaneados</span>
+          </div>
+          <div class="stat-divider" aria-hidden="true"></div>
+          <div class="stat-card">
+            <span class="stat-number" id="stat-recycled">0</span>
+            <span class="stat-label">Reciclados<br>correctamente</span>
+          </div>
+          <div class="stat-divider" aria-hidden="true"></div>
+          <div class="stat-card">
+            <span class="stat-number" id="stat-streak">0</span>
+            <span class="stat-label">Días de<br>racha</span>
+          </div>
+        </section>
+
+        <section class="materials-grid" aria-label="Tipos de materiales">
+          <h3 class="section-title">Materiales que identificamos</h3>
+          <div class="materials-list" role="list">
+            <div class="material-chip" role="listitem" style="--chip-color:#1565C0;--chip-bg:#E3F2FD">
+              <span class="chip-dot" aria-hidden="true"></span>Plástico
+            </div>
+            <div class="material-chip" role="listitem" style="--chip-color:#2E7D32;--chip-bg:#E8F5E9">
+              <span class="chip-dot" aria-hidden="true"></span>Vidrio
+            </div>
+            <div class="material-chip" role="listitem" style="--chip-color:#827717;--chip-bg:#F9FBE7">
+              <span class="chip-dot" aria-hidden="true"></span>Papel
+            </div>
+            <div class="material-chip" role="listitem" style="--chip-color:#4E342E;--chip-bg:#EFEBE9">
+              <span class="chip-dot" aria-hidden="true"></span>Cartón
+            </div>
+            <div class="material-chip" role="listitem" style="--chip-color:#546E7A;--chip-bg:#ECEFF1">
+              <span class="chip-dot" aria-hidden="true"></span>Metal
+            </div>
+            <div class="material-chip" role="listitem" style="--chip-color:#558B2F;--chip-bg:#F1F8E9">
+              <span class="chip-dot" aria-hidden="true"></span>Orgánico
+            </div>
+            <div class="material-chip" role="listitem" style="--chip-color:#E65100;--chip-bg:#FFF3E0">
+              <span class="chip-dot" aria-hidden="true"></span>Electrónico
+            </div>
+            <div class="material-chip" role="listitem" style="--chip-color:#880E4F;--chip-bg:#FCE4EC">
+              <span class="chip-dot" aria-hidden="true"></span>Peligroso
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <nav class="bottom-nav" role="navigation" aria-label="Navegación principal">
+        <button class="nav-item active" data-screen="home" aria-label="Inicio" aria-current="page">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span>Inicio</span>
+        </button>
+        <button class="nav-item" data-screen="scan" aria-label="Escanear">
+          <div class="nav-scan-btn" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </div>
+          <span>Escanear</span>
+        </button>
+        <button class="nav-item" data-screen="history" aria-label="Historial">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span>Historial</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- ===== PANTALLA 2: ESCANEO ===== -->
+    <div id="screen-scan" class="screen" role="main" aria-label="Pantalla de escaneo">
+      <div class="scan-header">
+        <button class="btn-back" id="btn-back-scan" aria-label="Volver al inicio">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        </button>
+        <span class="scan-title">Escanear residuo</span>
+        <button class="btn-icon btn-torch" id="btn-torch" aria-label="Activar linterna" aria-pressed="false">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2h8l4 10H4L8 2z"/><path d="M12 12v8"/><path d="M8 22h8"/></svg>
+        </button>
+      </div>
+
+      <div class="camera-container" role="region" aria-label="Visor de cámara">
+        <video id="camera-feed" autoplay playsinline muted aria-label="Vista de cámara en tiempo real"></video>
+        <canvas id="camera-canvas" style="display:none" aria-hidden="true"></canvas>
+
+        <div class="camera-overlay" aria-hidden="true">
+          <div class="overlay-top"></div>
+          <div class="overlay-middle">
+            <div class="overlay-side"></div>
+            <div class="scan-window" role="img" aria-label="Marco de escaneo">
+              <div class="corner tl"></div><div class="corner tr"></div>
+              <div class="corner bl"></div><div class="corner br"></div>
+              <div class="scan-line" id="scan-line"></div>
+            </div>
+            <div class="overlay-side"></div>
+          </div>
+          <div class="overlay-bottom"></div>
+        </div>
+
+        <div class="scan-hint" role="status" aria-live="polite" id="scan-hint">
+          Centra el residuo en el marco
+        </div>
+
+        <div class="scan-processing" id="scan-processing" aria-live="polite" aria-label="Procesando imagen" hidden>
+          <div class="processing-ring" aria-hidden="true"></div>
+          <span>Analizando...</span>
+        </div>
+      </div>
+
+      <div class="scan-controls">
+        <div class="gallery-btn-wrap">
+          <button class="btn-gallery" id="btn-gallery" aria-label="Seleccionar imagen de galería">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </button>
+          <input type="file" id="gallery-input" accept="image/*" style="display:none" aria-hidden="true">
+        </div>
+
+        <button class="btn-capture" id="btn-capture" aria-label="Capturar imagen para analizar">
+          <span class="capture-ring" aria-hidden="true"></span>
+          <span class="capture-inner" aria-hidden="true"></span>
+        </button>
+
+        <button class="btn-flip" id="btn-flip" aria-label="Cambiar cámara">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+        </button>
+      </div>
+
+      <div class="camera-error" id="camera-error" hidden role="alert">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        <h3>Cámara no disponible</h3>
+        <p>Por favor permite el acceso a la cámara o usa la opción de galería para subir una imagen.</p>
+        <button class="btn-primary" id="btn-retry-camera">Intentar de nuevo</button>
+      </div>
+    </div>
+
+    <!-- ===== PANTALLA 3: RESULTADO ===== -->
+    <div id="screen-result" class="screen" role="main" aria-label="Resultado del análisis" aria-live="polite">
+      <div class="result-header" id="result-header">
+        <button class="btn-back btn-back-light" id="btn-back-result" aria-label="Volver al inicio">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        </button>
+        <span class="result-header-title">Resultado</span>
+        <button class="btn-icon btn-share" id="btn-share" aria-label="Compartir resultado">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        </button>
+      </div>
+
+      <div class="result-hero" id="result-hero">
+        <div class="result-icon-wrap" id="result-icon-wrap" aria-hidden="true">
+          <div class="result-icon" id="result-icon"></div>
+        </div>
+        <div class="result-label">
+          <span class="result-type-small">Material identificado</span>
+          <h2 class="result-type-name" id="result-type-name">—</h2>
+          <div class="result-confidence" id="result-confidence" role="status">
+            <span class="conf-label">Confianza:</span>
+            <div class="conf-bar" aria-hidden="true"><div class="conf-fill" id="conf-fill"></div></div>
+            <span class="conf-pct" id="conf-pct">—</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-body">
+        <section class="result-card" aria-labelledby="bin-heading">
+          <h3 id="bin-heading" class="card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            Contenedor correcto
+          </h3>
+          <div class="bin-display" id="bin-display">
+            <div class="bin-icon" id="bin-icon" aria-hidden="true"></div>
+            <div class="bin-info">
+              <span class="bin-color-name" id="bin-color-name">—</span>
+              <span class="bin-desc" id="bin-desc">—</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="result-card" aria-labelledby="steps-heading">
+          <h3 id="steps-heading" class="card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            Pasos a seguir
+          </h3>
+          <ol class="steps-list" id="steps-list" aria-label="Pasos de reciclaje">
+          </ol>
+        </section>
+
+        <section class="result-card" aria-labelledby="impact-heading">
+          <h3 id="impact-heading" class="card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Impacto ambiental
+          </h3>
+          <div class="impact-text" id="impact-text" aria-label="Descripción del impacto ambiental"></div>
+        </section>
+
+        <div class="result-actions" role="group" aria-label="Acciones del resultado">
+          <button class="btn-primary btn-full" id="btn-scan-again">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Escanear otro residuo
+          </button>
+          <button class="btn-secondary btn-full" id="btn-save-result">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Guardar en historial
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PANTALLA 4: HISTORIAL ===== -->
+    <div id="screen-history" class="screen" role="main" aria-label="Historial de escaneos">
+      <header class="app-header" role="banner">
+        <div class="header-inner">
+          <h2 class="header-title">Mi historial</h2>
+          <button class="btn-icon" id="btn-clear-history" aria-label="Limpiar historial">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="history-content">
+        <div class="history-empty" id="history-empty" role="status">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <p>Aún no has escaneado nada.</p>
+          <button class="btn-primary" id="btn-go-scan">Escanear primer residuo</button>
+        </div>
+        <ul class="history-list" id="history-list" aria-label="Lista de residuos escaneados"></ul>
+      </div>
+
+      <nav class="bottom-nav" role="navigation" aria-label="Navegación principal">
+        <button class="nav-item" data-screen="home" aria-label="Inicio">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span>Inicio</span>
+        </button>
+        <button class="nav-item" data-screen="scan" aria-label="Escanear">
+          <div class="nav-scan-btn" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </div>
+          <span>Escanear</span>
+        </button>
+        <button class="nav-item active" data-screen="history" aria-label="Historial" aria-current="page">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span>Historial</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- ===== TOAST NOTIFICATIONS ===== -->
+    <div id="toast-container" aria-live="polite" aria-atomic="true" role="status"></div>
+
+  </div><!-- /#app -->
+
+  <script src="js/data.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/scanner.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
