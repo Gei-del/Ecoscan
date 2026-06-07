@@ -1,0 +1,24 @@
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editores
+.vscode/
+.idea/
+*.swp
+*~
+
+# Dependencias (no se usan en este sitio estático, pero por seguridad)
+node_modules/
+
+# Vercel
+.vercel/
+
+# Temporales
+.cache/
+tmp/
