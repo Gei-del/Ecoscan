@@ -4,9 +4,7 @@ const Scanner = (() => {
   let stream = null;
   let facingMode = 'environment';
   let torchActive = false;
-  let analysisTimeout = null;
-
-  const ANALYSIS_DELAY_MS = 2200;
+  let activeAnalysis = null;
 
   async function startCamera(videoEl) {
     await stopCamera();
@@ -77,14 +75,36 @@ const Scanner = (() => {
     return canvasEl.toDataURL('image/jpeg', 0.85);
   }
 
-  function analyzeImage(_imageDataUrl, callback) {
-    clearTimeout(analysisTimeout);
-    analysisTimeout = setTimeout(() => {
-      const scenario = getRandomScenario();
-      const material = getMaterialById(scenario.material);
-      callback({ ok: true, material, confidence: scenario.confidence });
-    }, ANALYSIS_DELAY_MS);
-    return () => clearTimeout(analysisTimeout);
+  /* Análisis a través de ScannerEngine (proveedor configurable).
+     Devuelve una función para cancelar el callback pendiente. */
+  function analyzeImage(imageDataUrl, callback) {
+    let cancelled = false;
+    activeAnalysis = () => { cancelled = true; };
+
+    ScannerEngine.analyze(imageDataUrl)
+      .then((res) => {
+        if (cancelled) return;
+        if (!res || !res.ok) {
+          callback({ ok: false, reason: res?.reason || 'engine_error' });
+          return;
+        }
+        const material = getMaterialById(res.materialId);
+        if (!material) {
+          callback({ ok: false, reason: 'unknown_material' });
+          return;
+        }
+        callback({
+          ok: true,
+          material,
+          confidence: res.confidence,
+          source: res.source
+        });
+      })
+      .catch(() => {
+        if (!cancelled) callback({ ok: false, reason: 'engine_error' });
+      });
+
+    return () => { if (activeAnalysis) activeAnalysis(); };
   }
 
   function analyzeFile(file, callback) {
@@ -107,5 +127,10 @@ const Scanner = (() => {
     return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
   }
 
-  return { startCamera, stopCamera, flipCamera, toggleTorch, captureFrame, analyzeImage, analyzeFile, hasCamera };
+  return {
+    startCamera, stopCamera, flipCamera, toggleTorch, captureFrame,
+    analyzeImage, analyzeFile, hasCamera,
+    setMode: (m) => ScannerEngine.setMode(m),
+    getMode: () => ScannerEngine.getMode()
+  };
 })();

@@ -84,6 +84,7 @@ const Storage = (() => {
       xp: 0,
       level: 1,
       achievements: [],
+      claimedChallenges: [],
       impact: { co2: 0, water: 0, trees: 0, energy: 0 }
     });
   }
@@ -127,6 +128,20 @@ const Storage = (() => {
     _set(KEYS.progress, p);
   }
 
+  /* === DESAFÍOS RECLAMADOS (recompensas ya otorgadas) === */
+  function getClaimedChallenges() {
+    return getProgress().claimedChallenges || [];
+  }
+
+  function claimChallenges(keys) {
+    if (!keys || !keys.length) return;
+    const p = getProgress();
+    const merged = Array.from(new Set([...(p.claimedChallenges || []), ...keys]));
+    /* Conserva sólo las 40 más recientes para no inflar el storage. */
+    p.claimedChallenges = merged.slice(-40);
+    _set(KEYS.progress, p);
+  }
+
   /* === ACTIVIDAD POR DÍA (para desafíos) === */
   function recordActivity(materialId) {
     const today = new Date().toDateString();
@@ -165,6 +180,33 @@ const Storage = (() => {
     };
   }
 
+  /* Serie de los últimos N días: [{ label, dateKey, count }] (orden cronológico). */
+  function getDailySeries(days = 7) {
+    const data = _get(KEYS.activity, { days: {}, weeks: {} });
+    const map = data.days || {};
+    const out = [];
+    const WD = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 86400000);
+      const key = d.toDateString();
+      out.push({
+        label: WD[d.getDay()],
+        dateKey: key,
+        count: (map[key] && map[key].count) || 0
+      });
+    }
+    return out;
+  }
+
+  /* Distribución acumulada por material: [{ materialId, count }] desc. */
+  function getMaterialDistribution() {
+    const stats = getStats();
+    const by = stats.byMaterial || {};
+    return Object.keys(by)
+      .map((k) => ({ materialId: k, count: by[k] }))
+      .sort((a, b) => b.count - a.count);
+  }
+
   function _prune(obj, keep) {
     const keys = Object.keys(obj);
     if (keys.length <= keep) return;
@@ -195,6 +237,9 @@ const Storage = (() => {
       icon: entry.icon,
       bgColor: entry.bgColor,
       confidence: entry.confidence,
+      recyclable: entry.recyclable !== undefined ? entry.recyclable : true,
+      co2Saved: entry.co2Saved || 0,
+      source: entry.source || 'demo',
       timestamp: new Date().toISOString()
     });
     if (hist.length > MAX_HISTORY) hist.splice(MAX_HISTORY);
@@ -226,7 +271,9 @@ const Storage = (() => {
     getStreak, getBestStreak, updateStreak,
     getProgress, addXP, addImpact, getImpact,
     getUnlockedAchievements, unlockAchievements, setLevel,
+    getClaimedChallenges, claimChallenges,
     recordActivity, getActivitySnapshot,
+    getDailySeries, getMaterialDistribution,
     getHistory, addToHistory, clearHistory, resetAll, isAvailable
   };
 })();

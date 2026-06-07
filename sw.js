@@ -5,7 +5,7 @@
    Offline-first PWA con caché inteligente
    ========================================= */
 
-const VERSION = 'ecoscan-v2.0.0';
+const VERSION = 'ecoscan-v2.1.0';
 const CORE_CACHE = `${VERSION}-core`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 
@@ -17,12 +17,16 @@ const CORE_ASSETS = [
   './css/styles.css',
   './js/data.js',
   './js/storage.js',
+  './js/scanner-engine.js',
   './js/scanner.js',
   './js/gamification.js',
   './js/ui.js',
   './js/app.js',
   './assets/icon-192.png',
-  './assets/icon-512.png'
+  './assets/icon-512.png',
+  './assets/icon-maskable-512.png',
+  './assets/apple-touch-icon.png',
+  './assets/favicon-32.png'
 ];
 
 /* === INSTALL: precache del app shell === */

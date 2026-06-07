@@ -173,6 +173,8 @@ const UI = (() => {
     }
 
     renderImpact();
+    renderActivityChart();
+    renderDistribution();
     renderChallenges();
     renderAchievements();
   }
@@ -200,6 +202,117 @@ const UI = (() => {
       if (i < steps) requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
+  }
+
+  /* === GRÁFICO DE ACTIVIDAD SEMANAL (barras Canvas, estilo Strava) === */
+  function renderActivityChart() {
+    const canvas = document.getElementById('activity-chart');
+    const empty  = document.getElementById('activity-empty');
+    if (!canvas) return;
+
+    const series = Storage.getDailySeries(7);
+    const total  = series.reduce((s, d) => s + d.count, 0);
+    setText('activity-total', `${total} ${total === 1 ? 'escaneo' : 'escaneos'}`);
+
+    if (empty) empty.hidden = total > 0;
+    canvas.style.display = total > 0 ? 'block' : 'none';
+    if (total === 0) return;
+
+    const cssW = canvas.clientWidth || 320;
+    const cssH = 160;
+    const dpr  = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width  = cssW * dpr;
+    canvas.height = cssH * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cssW, cssH);
+
+    const padX = 14, padTop = 14, padBottom = 26;
+    const max  = Math.max(...series.map(d => d.count), 1);
+    const n    = series.length;
+    const gap  = 12;
+    const barW = (cssW - padX * 2 - gap * (n - 1)) / n;
+    const baseY = cssH - padBottom;
+    const maxBarH = baseY - padTop;
+
+    const accent = getCssVar('--green-800', '#2E7D32');
+    const accent2 = getCssVar('--green-600', '#43A047');
+    const todayIdx = n - 1;
+
+    const grad = ctx.createLinearGradient(0, padTop, 0, baseY);
+    grad.addColorStop(0, accent2);
+    grad.addColorStop(1, accent);
+
+    series.forEach((d, i) => {
+      const x = padX + i * (barW + gap);
+      const h = Math.max(4, (d.count / max) * maxBarH);
+      const y = baseY - h;
+      const r = Math.min(barW / 2, 8);
+
+      ctx.fillStyle = (i === todayIdx) ? grad : 'rgba(46,125,50,0.18)';
+      _roundRect(ctx, x, y, barW, h, r);
+      ctx.fill();
+
+      // valor sobre la barra
+      if (d.count > 0) {
+        ctx.fillStyle = '#37474F';
+        ctx.font = '600 11px DM Sans, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(String(d.count), x + barW / 2, y - 5);
+      }
+
+      // etiqueta del día
+      ctx.fillStyle = (i === todayIdx) ? accent : '#90A4AE';
+      ctx.font = `${i === todayIdx ? '700' : '500'} 11px DM Sans, system-ui, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText(d.label, x + barW / 2, cssH - 8);
+    });
+  }
+
+  function _roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, 0);
+    ctx.arcTo(x, y + h, x, y, 0);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function getCssVar(name, fallback) {
+    const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return v || fallback;
+  }
+
+  /* === DISTRIBUCIÓN POR MATERIAL (barras horizontales) === */
+  function renderDistribution() {
+    const listEl = document.getElementById('distribution-list');
+    const empty  = document.getElementById('distribution-empty');
+    if (!listEl) return;
+
+    const dist = Storage.getMaterialDistribution();
+    if (empty) empty.hidden = dist.length > 0;
+    if (!dist.length) { listEl.innerHTML = ''; return; }
+
+    const max = Math.max(...dist.map(d => d.count), 1);
+    listEl.innerHTML = dist.map((d, i) => {
+      const mat = getMaterialById(d.materialId);
+      if (!mat) return '';
+      const pct = Math.round((d.count / max) * 100);
+      return `
+        <div class="dist-row" role="listitem" style="animation-delay:${i * 50}ms">
+          <span class="dist-icon" aria-hidden="true">${mat.icon}</span>
+          <div class="dist-body">
+            <div class="dist-top">
+              <span class="dist-name">${escapeHTML(mat.name)}</span>
+              <span class="dist-count">${d.count}</span>
+            </div>
+            <div class="dist-bar" aria-hidden="true">
+              <div class="dist-bar-fill" style="width:${pct}%;background:${escapeAttr(mat.color)}"></div>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
   }
 
   function challengeMarkup(ch, snap) {
@@ -251,32 +364,131 @@ const UI = (() => {
   }
 
   /* === HISTORIAL === */
+  let historyFilter = 'all';
+  let historyQuery = '';
+  let historyToolsBound = false;
+
   function renderHistory() {
     const history = Storage.getHistory();
     const listEl  = document.getElementById('history-list');
     const emptyEl = document.getElementById('history-empty');
+    const toolsEl = document.getElementById('history-tools');
+    const noResEl = document.getElementById('history-noresults');
     if (!listEl || !emptyEl) return;
 
+    bindHistoryTools();
+
+    /* Sin ningún escaneo guardado: estado vacío total. */
     if (history.length === 0) {
       emptyEl.hidden = false;
+      if (toolsEl) toolsEl.hidden = true;
+      if (noResEl) noResEl.hidden = true;
       listEl.innerHTML = '';
       return;
     }
 
     emptyEl.hidden = true;
-    listEl.innerHTML = history.map((item, i) => {
-      const date = new Date(item.timestamp);
-      const dateStr = date.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-      return `
-        <li class="history-item" data-id="${escapeAttr(item.id)}" style="animation-delay:${Math.min(i, 8) * 45}ms">
-          <div class="history-icon" style="background:${escapeAttr(item.bgColor || '#E8F5E9')}" aria-hidden="true">${item.icon || '♻️'}</div>
-          <div class="history-info">
-            <div class="history-type">${escapeHTML(item.materialName)}</div>
-            <div class="history-date">${escapeHTML(dateStr)}</div>
-          </div>
-          <span class="history-bin" style="background:${escapeAttr(item.bgColor || '#E8F5E9')};color:#263238">${escapeHTML(item.binName || '—')}</span>
-        </li>`;
-    }).join('');
+    if (toolsEl) toolsEl.hidden = false;
+    buildFilterChips(history);
+
+    /* Aplica filtro de material y búsqueda de texto. */
+    const q = historyQuery.trim().toLowerCase();
+    const filtered = history.filter((item) => {
+      if (historyFilter !== 'all' && item.materialId !== historyFilter) return false;
+      if (!q) return true;
+      return (`${item.materialName} ${item.binName}`).toLowerCase().includes(q);
+    });
+
+    if (filtered.length === 0) {
+      if (noResEl) noResEl.hidden = false;
+      listEl.innerHTML = '';
+      return;
+    }
+    if (noResEl) noResEl.hidden = true;
+
+    /* Agrupa por fecha (timeline). */
+    const groups = groupByDay(filtered);
+    let html = '';
+    let idx = 0;
+    for (const group of groups) {
+      html += `<li class="history-group-label" aria-hidden="true">${escapeHTML(group.label)}</li>`;
+      for (const item of group.items) {
+        const date = new Date(item.timestamp);
+        const timeStr = date.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+        const conf = typeof item.confidence === 'number' ? `${Math.round(item.confidence)}%` : '';
+        const co2 = item.co2Saved ? `${Gamification.formatImpact(item.co2Saved, 'co2')} kg CO₂` : '';
+        const meta = [timeStr, conf && `${conf} confianza`, co2].filter(Boolean).join(' · ');
+        html += `
+          <li class="history-item" data-id="${escapeAttr(item.id)}" style="animation-delay:${Math.min(idx, 8) * 45}ms">
+            <div class="history-icon" style="background:${escapeAttr(item.bgColor || '#E8F5E9')}" aria-hidden="true">${item.icon || '♻️'}</div>
+            <div class="history-info">
+              <div class="history-type">${escapeHTML(item.materialName)}</div>
+              <div class="history-date">${escapeHTML(meta)}</div>
+            </div>
+            <span class="history-bin" style="background:${escapeAttr(item.bgColor || '#E8F5E9')};color:#263238">${escapeHTML(item.binName || '—')}</span>
+          </li>`;
+        idx++;
+      }
+    }
+    listEl.innerHTML = html;
+  }
+
+  function groupByDay(items) {
+    const today = new Date().toDateString();
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+    const map = new Map();
+    for (const item of items) {
+      const key = new Date(item.timestamp).toDateString();
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(item);
+    }
+    return Array.from(map.entries()).map(([key, list]) => {
+      let label;
+      if (key === today) label = 'Hoy';
+      else if (key === yesterday) label = 'Ayer';
+      else label = new Date(key).toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
+      return { label: label.charAt(0).toUpperCase() + label.slice(1), items: list };
+    });
+  }
+
+  function buildFilterChips(history) {
+    const wrap = document.getElementById('history-filters');
+    if (!wrap) return;
+    const present = [];
+    const seen = new Set();
+    for (const item of history) {
+      if (!seen.has(item.materialId)) { seen.add(item.materialId); present.push(item.materialId); }
+    }
+    let html = `<button class="filter-chip ${historyFilter === 'all' ? 'active' : ''}" data-filter="all" role="tab" aria-selected="${historyFilter === 'all'}">Todos</button>`;
+    for (const id of present) {
+      const mat = getMaterialById(id);
+      if (!mat) continue;
+      const active = historyFilter === id;
+      html += `<button class="filter-chip ${active ? 'active' : ''}" data-filter="${escapeAttr(id)}" role="tab" aria-selected="${active}"><span aria-hidden="true">${mat.icon}</span>${escapeHTML(mat.name)}</button>`;
+    }
+    wrap.innerHTML = html;
+  }
+
+  function bindHistoryTools() {
+    if (historyToolsBound) return;
+    historyToolsBound = true;
+
+    const input = document.getElementById('history-search-input');
+    if (input) {
+      input.addEventListener('input', (e) => {
+        historyQuery = e.target.value || '';
+        renderHistory();
+      });
+    }
+    const filters = document.getElementById('history-filters');
+    if (filters) {
+      filters.addEventListener('click', (e) => {
+        const btn = e.target.closest('.filter-chip');
+        if (!btn) return;
+        historyFilter = btn.dataset.filter || 'all';
+        renderHistory();
+      });
+    }
   }
 
   /* === CELEBRACIÓN === */

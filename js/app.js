@@ -4,6 +4,7 @@
 
   let currentMaterial = null;
   let currentConfidence = 0;
+  let currentSource = 'demo';
   let lastGainedXP = 0;
   let cancelAnalysis  = null;
   let savedThisResult = false;
@@ -182,6 +183,7 @@
 
     currentMaterial = result.material;
     currentConfidence = result.confidence;
+    currentSource = result.source || 'demo';
     savedThisResult = false;
 
     /* === Persistencia base === */
@@ -210,17 +212,44 @@
       Storage.unlockAchievements(newlyUnlocked.map(a => a.id));
     }
 
+    /* === Desafíos: detecta completados y otorga su recompensa === */
+    const challengeSnapshot = buildChallengeSnapshot();
+    const challenges = Gamification.getActiveChallenges();
+    const completedChallenges = Gamification.evaluateChallenges(
+      challenges, challengeSnapshot, Storage.getClaimedChallenges()
+    );
+    if (completedChallenges.length) {
+      const rewardXP = completedChallenges.reduce((sum, c) => sum + (c.reward || 0), 0);
+      Storage.addXP(rewardXP);
+      Storage.claimChallenges(completedChallenges.map(c => c.key));
+      gained += rewardXP;
+      lastGainedXP = gained;
+    }
+
+    /* Recalcula nivel tras sumar recompensas de desafíos. */
+    const finalXP = Storage.getProgress().xp || 0;
+    const finalLevelInfo = Gamification.getLevelInfo(finalXP);
+    Storage.setLevel(finalLevelInfo.level);
+
     UI.showResult(result.material, result.confidence, gained);
 
     /* === Celebraciones encadenadas === */
-    const leveledUp = newLevelInfo.level > prevLevel;
+    const leveledUp = finalLevelInfo.level > prevLevel;
     setTimeout(() => {
       if (leveledUp) {
         UI.showCelebration({
           icon: '🚀',
           eyebrow: '¡Subiste de nivel!',
-          title: `Nivel ${newLevelInfo.level}`,
-          desc: newLevelInfo.title
+          title: `Nivel ${finalLevelInfo.level}`,
+          desc: finalLevelInfo.title
+        });
+      } else if (completedChallenges.length) {
+        const c = completedChallenges[0];
+        UI.showCelebration({
+          icon: c.icon || '🎯',
+          eyebrow: '¡Desafío completado!',
+          title: c.title,
+          desc: `+${c.reward} XP de recompensa`
         });
       } else if (newlyUnlocked.length) {
         const a = newlyUnlocked[0];
@@ -245,7 +274,20 @@
       byMaterial: stats.byMaterial || {},
       bestStreak: Storage.getBestStreak(),
       co2: impact.co2,
+      water: impact.water,
+      trees: impact.trees,
+      energy: impact.energy,
+      savedCount: Storage.getHistory().length,
       level
+    };
+  }
+
+  /* Snapshot para desafíos: actividad diaria/semanal + mejor racha. */
+  function buildChallengeSnapshot() {
+    const activity = Storage.getActivitySnapshot();
+    return {
+      ...activity,
+      bestStreak: Storage.getBestStreak()
     };
   }
 
@@ -261,11 +303,26 @@
       binName:      currentMaterial.bin.name,
       icon:         currentMaterial.icon,
       bgColor:      currentMaterial.bgColor,
-      confidence:   currentConfidence
+      confidence:   currentConfidence,
+      recyclable:   currentMaterial.id !== 'hazardous',
+      co2Saved:     Gamification.computeImpactDelta(currentMaterial.id).co2,
+      source:       currentSource
     });
     Storage.addXP(Gamification.xpForSave());
     savedThisResult = true;
     UI.showToast('Guardado en tu historial. +5 XP', 'success');
+
+    /* Re-evalúa logros que dependen de guardados (p. ej. Archivista). */
+    const levelNow = Gamification.getLevelInfo(Storage.getProgress().xp || 0).level;
+    const snapshot = buildSnapshot(levelNow);
+    const newly = Gamification.evaluateAchievements(snapshot, Storage.getUnlockedAchievements());
+    if (newly.length) {
+      Storage.unlockAchievements(newly.map(a => a.id));
+      const a = newly[0];
+      setTimeout(() => UI.showCelebration({
+        icon: a.icon, eyebrow: '¡Logro desbloqueado!', title: a.name, desc: a.desc
+      }), 400);
+    }
   }
 
   function confirmClearHistory() {

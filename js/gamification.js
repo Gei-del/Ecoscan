@@ -40,16 +40,22 @@ const Gamification = (() => {
 
   /* === LOGROS === */
   const ACHIEVEMENTS = [
-    { id: 'first_scan',  icon: '🌱', name: 'Primer paso',       desc: 'Tu primer escaneo',            check: (s) => s.scanned >= 1 },
+    { id: 'first_scan',  icon: '🌱', name: 'Eco Novato',         desc: 'Tu primer escaneo',            check: (s) => s.scanned >= 1 },
     { id: 'scan_10',     icon: '🔍', name: 'Explorador',         desc: '10 residuos escaneados',       check: (s) => s.scanned >= 10 },
+    { id: 'scan_25',     icon: '🧭', name: 'Investigador',       desc: '25 residuos escaneados',       check: (s) => s.scanned >= 25 },
     { id: 'scan_50',     icon: '♻️', name: 'Reciclador serio',   desc: '50 residuos escaneados',       check: (s) => s.scanned >= 50 },
     { id: 'scan_100',    icon: '🏆', name: 'Centenario',         desc: '100 residuos escaneados',      check: (s) => s.scanned >= 100 },
+    { id: 'scan_250',    icon: '🌟', name: 'Protector del Planeta', desc: '250 residuos escaneados',  check: (s) => s.scanned >= 250 },
     { id: 'streak_3',    icon: '🔥', name: 'En racha',           desc: '3 días consecutivos',          check: (s) => s.bestStreak >= 3 },
     { id: 'streak_7',    icon: '⚡', name: 'Semana perfecta',    desc: '7 días consecutivos',          check: (s) => s.bestStreak >= 7 },
     { id: 'streak_30',   icon: '👑', name: 'Imparable',          desc: '30 días consecutivos',         check: (s) => s.bestStreak >= 30 },
+    { id: 'types_4',     icon: '🧩', name: 'Aprendiz versátil',  desc: 'Escanea 4 materiales distintos', check: (s) => Object.keys(s.byMaterial || {}).length >= 4 },
     { id: 'all_types',   icon: '🌈', name: 'Coleccionista',      desc: 'Escanea los 8 materiales',     check: (s) => Object.keys(s.byMaterial || {}).length >= 8 },
+    { id: 'saved_5',     icon: '📚', name: 'Archivista',         desc: 'Guarda 5 resultados',          check: (s) => (s.savedCount || 0) >= 5 },
     { id: 'co2_1',       icon: '🌍', name: 'Aire limpio',        desc: 'Evita 1 kg de CO₂',            check: (s) => s.co2 >= 1 },
     { id: 'co2_10',      icon: '🌳', name: 'Pulmón verde',       desc: 'Evita 10 kg de CO₂',           check: (s) => s.co2 >= 10 },
+    { id: 'water_100',   icon: '💧', name: 'Guardián del agua',  desc: 'Ahorra 100 litros de agua',    check: (s) => (s.water || 0) >= 100 },
+    { id: 'energy_20',   icon: '⚡', name: 'Eficiencia total',   desc: 'Ahorra 20 kWh de energía',     check: (s) => (s.energy || 0) >= 20 },
     { id: 'level_5',     icon: '⭐', name: 'Mitad del camino',   desc: 'Alcanza el nivel 5',           check: (s) => s.level >= 5 },
     { id: 'level_10',    icon: '💎', name: 'Élite EcoScan',      desc: 'Alcanza el nivel 10',          check: (s) => s.level >= 10 }
   ];
@@ -144,6 +150,42 @@ const Gamification = (() => {
     return `${d.getUTCFullYear()}-W${week}`;
   }
 
+  /* === DESAFÍOS: progreso y evaluación de recompensas === */
+
+  /* Valor actual de la métrica de un desafío a partir del snapshot de actividad. */
+  function getChallengeValue(challenge, snapshot) {
+    const v = (snapshot || {})[challenge.metric];
+    return typeof v === 'number' ? v : 0;
+  }
+
+  /* Progreso 0..100 y estado de completado de un desafío. */
+  function getChallengeProgress(challenge, snapshot) {
+    const value = getChallengeValue(challenge, snapshot);
+    const goal = challenge.goal || 1;
+    const ratio = Math.min(1, value / goal);
+    return {
+      value: Math.min(value, goal),
+      goal,
+      percent: Math.round(ratio * 100),
+      completed: value >= goal
+    };
+  }
+
+  /* Devuelve los desafíos recién completados (no reclamados aún).
+     Cada uno incluye su `key` única por periodo para evitar dobles recompensas. */
+  function evaluateChallenges(challenges, snapshot, claimedKeys) {
+    const claimed = new Set(claimedKeys || []);
+    const newlyCompleted = [];
+    for (const ch of (challenges || [])) {
+      const key = `${ch.id}_${ch.period}`;
+      const value = getChallengeValue(ch, snapshot);
+      if (value >= (ch.goal || 1) && !claimed.has(key)) {
+        newlyCompleted.push({ ...ch, key });
+      }
+    }
+    return newlyCompleted;
+  }
+
   function formatImpact(value, unit) {
     if (unit === 'co2' || unit === 'energy') {
       return value >= 1 ? `${value.toFixed(1)}` : value.toFixed(2);
@@ -163,6 +205,7 @@ const Gamification = (() => {
     xpForScan, xpForSave, xpForStreak,
     evaluateAchievements, getAllAchievements,
     getActiveChallenges, formatImpact,
+    getChallengeValue, getChallengeProgress, evaluateChallenges,
     LEVELS
   };
 })();

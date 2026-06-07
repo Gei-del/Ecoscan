@@ -16,8 +16,9 @@
   <meta property="og:type" content="website">
   <title>EcoScan — Recicla con inteligencia</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="assets/icon-192.png">
-  <link rel="icon" type="image/png" href="assets/icon-192.png">
+ <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+ <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+ <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
   <link rel="stylesheet" href="css/styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -270,6 +271,31 @@
           </div>
         </section>
 
+        <!-- Actividad semanal (gráfico estilo Strava) -->
+        <section aria-labelledby="activity-title">
+          <div class="activity-head">
+            <h3 class="section-title section-title-pad" id="activity-title">Actividad semanal</h3>
+            <span class="activity-total" id="activity-total">0 escaneos</span>
+          </div>
+          <div class="chart-card">
+            <canvas id="activity-chart" class="activity-chart" role="img" aria-label="Gráfico de escaneos de los últimos 7 días"></canvas>
+            <div class="chart-empty" id="activity-empty" hidden>
+              <span>Escanea residuos para ver tu actividad de la semana.</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Distribución por material -->
+        <section aria-labelledby="distribution-title">
+          <h3 class="section-title section-title-pad" id="distribution-title">Materiales más reciclados</h3>
+          <div class="chart-card">
+            <div class="distribution-list" id="distribution-list" role="list"></div>
+            <div class="chart-empty" id="distribution-empty" hidden>
+              <span>Aún no has reciclado materiales. ¡Empieza a escanear!</span>
+            </div>
+          </div>
+        </section>
+
         <!-- Desafíos -->
         <section aria-labelledby="challenges-title">
           <h3 class="section-title section-title-pad" id="challenges-title">Desafíos activos</h3>
@@ -459,6 +485,16 @@
       </header>
 
       <div class="history-content">
+        <div class="history-tools" id="history-tools" hidden>
+          <div class="history-search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="search" id="history-search-input" placeholder="Buscar material o contenedor" aria-label="Buscar en el historial" autocomplete="off">
+          </div>
+          <div class="history-filters" id="history-filters" role="tablist" aria-label="Filtrar por material">
+            <button class="filter-chip active" data-filter="all" role="tab" aria-selected="true">Todos</button>
+          </div>
+        </div>
+
         <div class="history-empty" id="history-empty" role="status">
           <div class="empty-illustration" aria-hidden="true">
             <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -466,6 +502,9 @@
           <h3 class="empty-title">Tu historial está vacío</h3>
           <p>Escanea tu primer residuo para empezar a construir tu impacto.</p>
           <button class="btn-primary" id="btn-go-scan">Escanear primer residuo</button>
+        </div>
+        <div class="history-noresults" id="history-noresults" role="status" hidden>
+          <p>No se encontraron escaneos con ese filtro.</p>
         </div>
         <ul class="history-list" id="history-list" aria-label="Lista de residuos escaneados"></ul>
       </div>
@@ -532,10 +571,11 @@
 
   </div><!-- /#app -->
 
-  <script src="js/data.js"></script>
-  <script src="js/gamification.js"></script>
-  <script src="js/storage.js"></script>
-  <script src="js/scanner.js"></script>
+ <script src="js/data.js"></script>
+ <script src="js/gamification.js"></script>
+ <script src="js/storage.js"></script>
+ <script src="js/scanner-engine.js"></script>
+ <script src="js/scanner.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
 </body>
