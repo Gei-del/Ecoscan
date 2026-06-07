@@ -3,11 +3,18 @@
 (function EcoScanApp() {
 
   let currentMaterial = null;
+  let currentConfidence = 0;
+  let lastGainedXP = 0;
   let cancelAnalysis  = null;
+  let savedThisResult = false;
+  let deferredInstallPrompt = null;
 
   function init() {
     UI.init();
     bindEvents();
+    registerServiceWorker();
+    setupInstallPrompt();
+    setupOfflineIndicator();
     startSplash();
   }
 
@@ -16,24 +23,31 @@
     setTimeout(() => {
       UI.showScreen('home');
       UI.updateStats();
-    }, 2600);
+    }, 2400);
   }
 
   function bindEvents() {
-    on('btn-scan',       'click', () => goToScan());
-    on('btn-back-scan',  'click', () => leaveScanner());
-    on('btn-back-result','click', () => { UI.showScreen('home', { back: true }); UI.updateStats(); });
-    on('btn-scan-again', 'click', () => goToScan());
-    on('btn-save-result','click', () => saveCurrentResult());
-    on('btn-capture',    'click', () => captureAndAnalyze());
-    on('btn-gallery',    'click', () => document.getElementById('gallery-input')?.click());
-    on('btn-flip',       'click', () => flipCamera());
-    on('btn-torch',      'click', () => handleTorch());
+    on('btn-scan',        'click', () => goToScan());
+    on('btn-back-scan',   'click', () => leaveScanner());
+    on('btn-back-result', 'click', () => { UI.showScreen('home', { back: true }); UI.updateStats(); });
+    on('btn-scan-again',  'click', () => goToScan());
+    on('btn-save-result', 'click', () => saveCurrentResult());
+    on('btn-capture',     'click', () => captureAndAnalyze());
+    on('btn-gallery',     'click', () => document.getElementById('gallery-input')?.click());
+    on('btn-flip',        'click', () => flipCamera());
+    on('btn-torch',       'click', () => handleTorch());
     on('btn-retry-camera','click', () => initCamera());
-    on('btn-go-scan',    'click', () => goToScan());
+    on('btn-go-scan',     'click', () => goToScan());
     on('btn-clear-history','click', () => confirmClearHistory());
-    on('btn-share',      'click', () => shareResult());
-    on('btn-stats',      'click', () => UI.showScreen('history'));
+    on('btn-share',       'click', () => shareResult());
+    on('btn-stats',       'click', () => goToDashboard());
+    on('btn-share-impact','click', () => shareImpact());
+    on('level-widget',    'click', () => goToDashboard());
+    on('btn-all-challenges', 'click', () => goToDashboard());
+    on('btn-celebration-close', 'click', () => UI.hideCelebration());
+    on('celebration-backdrop',  'click', () => UI.hideCelebration());
+    on('btn-install',         'click', () => triggerInstall());
+    on('btn-install-dismiss', 'click', () => dismissInstall());
 
     const galleryInput = document.getElementById('gallery-input');
     if (galleryInput) {
@@ -49,8 +63,13 @@
         const screen = btn.dataset.screen;
         if (screen === 'scan') { goToScan(); return; }
         if (screen === 'history') UI.renderHistory();
+        if (screen === 'dashboard') { goToDashboard(); return; }
         UI.showScreen(screen);
       });
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') UI.hideCelebration();
     });
 
     document.addEventListener('visibilitychange', () => {
@@ -61,6 +80,11 @@
   function on(id, event, handler) {
     const el = document.getElementById(id);
     if (el) el.addEventListener(event, handler);
+  }
+
+  function goToDashboard() {
+    UI.showScreen('dashboard');
+    UI.renderDashboard();
   }
 
   async function goToScan() {
@@ -108,6 +132,9 @@
       btn.setAttribute('aria-pressed', String(active));
       btn.title = active ? 'Desactivar linterna' : 'Activar linterna';
     }
+    if (!active && btn && btn.getAttribute('aria-pressed') === 'false') {
+      // sin capacidad de torch en muchos equipos; no molestar al usuario
+    }
   }
 
   function captureAndAnalyze() {
@@ -154,27 +181,95 @@
     }
 
     currentMaterial = result.material;
+    currentConfidence = result.confidence;
+    savedThisResult = false;
+
+    /* === Persistencia base === */
     Storage.incrementStats(result.material.id);
-    Storage.updateStreak();
-    UI.showResult(result.material, result.confidence);
+    const prevStreak = Storage.getStreak();
+    const newStreak  = Storage.updateStreak();
+    Storage.recordActivity(result.material.id);
+
+    /* === Impacto ambiental === */
+    Storage.addImpact(Gamification.computeImpactDelta(result.material.id));
+
+    /* === XP === */
+    let gained = Gamification.xpForScan();
+    if (newStreak > prevStreak) gained += Gamification.xpForStreak();
+    lastGainedXP = gained;
+
+    const prevLevel = Gamification.getLevelInfo(Storage.getProgress().xp || 0).level;
+    const newXP = Storage.addXP(gained);
+    const newLevelInfo = Gamification.getLevelInfo(newXP);
+    Storage.setLevel(newLevelInfo.level);
+
+    /* === Logros === */
+    const snapshot = buildSnapshot(newLevelInfo.level);
+    const newlyUnlocked = Gamification.evaluateAchievements(snapshot, Storage.getUnlockedAchievements());
+    if (newlyUnlocked.length) {
+      Storage.unlockAchievements(newlyUnlocked.map(a => a.id));
+    }
+
+    UI.showResult(result.material, result.confidence, gained);
+
+    /* === Celebraciones encadenadas === */
+    const leveledUp = newLevelInfo.level > prevLevel;
+    setTimeout(() => {
+      if (leveledUp) {
+        UI.showCelebration({
+          icon: '🚀',
+          eyebrow: '¡Subiste de nivel!',
+          title: `Nivel ${newLevelInfo.level}`,
+          desc: newLevelInfo.title
+        });
+      } else if (newlyUnlocked.length) {
+        const a = newlyUnlocked[0];
+        UI.showCelebration({
+          icon: a.icon,
+          eyebrow: '¡Logro desbloqueado!',
+          title: a.name,
+          desc: a.desc
+        });
+      } else {
+        UI.fireConfetti();
+      }
+    }, 900);
+  }
+
+  function buildSnapshot(level) {
+    const stats = Storage.getStats();
+    const impact = Storage.getImpact();
+    return {
+      scanned: stats.scanned,
+      recycled: stats.recycled,
+      byMaterial: stats.byMaterial || {},
+      bestStreak: Storage.getBestStreak(),
+      co2: impact.co2,
+      level
+    };
   }
 
   function saveCurrentResult() {
     if (!currentMaterial) return;
-    const stats = Storage.getStats();
+    if (savedThisResult) {
+      UI.showToast('Este resultado ya está en tu historial.', 'info');
+      return;
+    }
     Storage.addToHistory({
       materialId:   currentMaterial.id,
       materialName: currentMaterial.name,
       binName:      currentMaterial.bin.name,
       icon:         currentMaterial.icon,
       bgColor:      currentMaterial.bgColor,
-      confidence:   90
+      confidence:   currentConfidence
     });
-    UI.showToast('Guardado en tu historial.', 'success');
+    Storage.addXP(Gamification.xpForSave());
+    savedThisResult = true;
+    UI.showToast('Guardado en tu historial. +5 XP', 'success');
   }
 
   function confirmClearHistory() {
-    if (!confirm('¿Estás seguro de que quieres borrar todo tu historial y estadísticas?')) return;
+    if (!confirm('¿Borrar tu historial y estadísticas? Tus logros, nivel e impacto se conservarán.')) return;
     Storage.clearHistory();
     UI.renderHistory();
     UI.updateStats();
@@ -184,18 +279,89 @@
   async function shareResult() {
     if (!currentMaterial) return;
     const text = `Identifiqué un residuo con EcoScan: ${currentMaterial.name}. Va en el ${currentMaterial.bin.name}. ¡Recicla correctamente! ♻️`;
+    await shareText(text);
+  }
+
+  async function shareImpact() {
+    const impact = Storage.getImpact();
+    const info = Gamification.getLevelInfo(Storage.getProgress().xp || 0);
+    const text = `Con EcoScan soy nivel ${info.level} (${info.title}) y ya evité ${impact.co2.toFixed(1)} kg de CO₂ reciclando. ♻️🌍 ¡Únete!`;
+    await shareText(text);
+  }
+
+  async function shareText(text) {
     if (navigator.share) {
-      try {
-        await navigator.share({ title: 'EcoScan', text, url: window.location.href });
-      } catch { }
+      try { await navigator.share({ title: 'EcoScan', text, url: window.location.href }); } catch { }
     } else if (navigator.clipboard) {
       try {
         await navigator.clipboard.writeText(text);
-        UI.showToast('Resultado copiado al portapapeles.', 'success');
+        UI.showToast('Copiado al portapapeles.', 'success');
       } catch {
         UI.showToast('No se pudo compartir en este navegador.', 'error');
       }
     }
+  }
+
+  /* === PWA: Service Worker === */
+  function registerServiceWorker() {
+    if (!('serviceWorker' in navigator)) return;
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => { /* silencioso */ });
+    });
+  }
+
+  /* === PWA: Install prompt === */
+  function setupInstallPrompt() {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      if (sessionStorage.getItem('ecoscan_install_dismissed') === '1') return;
+      const banner = document.getElementById('install-banner');
+      if (banner) {
+        setTimeout(() => {
+          banner.hidden = false;
+          requestAnimationFrame(() => banner.classList.add('show'));
+        }, 4000);
+      }
+    });
+    window.addEventListener('appinstalled', () => {
+      dismissInstall();
+      UI.showToast('¡EcoScan instalada! 🌿', 'success');
+    });
+  }
+
+  async function triggerInstall() {
+    if (!deferredInstallPrompt) { dismissInstall(); return; }
+    deferredInstallPrompt.prompt();
+    try { await deferredInstallPrompt.userChoice; } catch { }
+    deferredInstallPrompt = null;
+    dismissInstall();
+  }
+
+  function dismissInstall() {
+    const banner = document.getElementById('install-banner');
+    if (!banner) return;
+    banner.classList.remove('show');
+    sessionStorage.setItem('ecoscan_install_dismissed', '1');
+    setTimeout(() => { banner.hidden = true; }, 280);
+  }
+
+  /* === PWA: Offline indicator === */
+  function setupOfflineIndicator() {
+    const indicator = document.getElementById('offline-indicator');
+    const update = () => {
+      if (!indicator) return;
+      if (navigator.onLine) {
+        indicator.classList.remove('show');
+        setTimeout(() => { indicator.hidden = true; }, 280);
+      } else {
+        indicator.hidden = false;
+        requestAnimationFrame(() => indicator.classList.add('show'));
+      }
+    };
+    window.addEventListener('online', update);
+    window.addEventListener('offline', update);
+    if (!navigator.onLine) update();
   }
 
   if (document.readyState === 'loading') {

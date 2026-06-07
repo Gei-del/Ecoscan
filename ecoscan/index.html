@@ -1,28 +1,39 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="bg-app">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="description" content="EcoScan - Identifica residuos con tu cámara y aprende a reciclar correctamente">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="EcoScan - Identifica residuos con tu cámara, aprende a reciclar y mide tu impacto ambiental real">
   <meta name="theme-color" content="#1B5E20">
+  <meta name="color-scheme" content="light">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
-  <meta http-equiv="X-Frame-Options" content="DENY">
-  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
   <meta name="robots" content="index, follow">
-  <title>EcoScan — Recicla inteligente</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="EcoScan">
+  <meta property="og:title" content="EcoScan — Recicla con inteligencia">
+  <meta property="og:description" content="Identifica residuos con tu cámara, sube de nivel y mide tu impacto ambiental.">
+  <meta property="og:type" content="website">
+  <title>EcoScan — Recicla con inteligencia</title>
   <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
+  <link rel="icon" type="image/png" href="assets/icon-192.png">
   <link rel="stylesheet" href="css/styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
+
+  <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
 
   <div id="app">
 
     <!-- ===== SPLASH SCREEN ===== -->
-    <div id="screen-splash" class="screen active" role="main" aria-label="Pantalla de carga EcoScan">
-      <div class="splash-bg"></div>
+    <div id="screen-splash" class="screen active" role="status" aria-label="Pantalla de carga EcoScan">
+      <div class="splash-bg" aria-hidden="true"></div>
+      <div class="splash-orb splash-orb-1" aria-hidden="true"></div>
+      <div class="splash-orb splash-orb-2" aria-hidden="true"></div>
       <div class="splash-content">
         <div class="logo-mark" aria-hidden="true">
           <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -36,16 +47,16 @@
         </div>
         <h1 class="logo-text">EcoScan</h1>
         <p class="logo-tagline">Recicla con inteligencia</p>
-        <div class="splash-loader" aria-label="Cargando...">
+        <div class="splash-loader" aria-label="Cargando">
           <div class="loader-bar"></div>
         </div>
       </div>
-      <p class="splash-version">v1.0.0 · GA3-220501101-AA1-EV01</p>
+      <p class="splash-version">v2.0.0 · GA3-220501101-AA1-EV01</p>
     </div>
 
     <!-- ===== PANTALLA 1: INICIO ===== -->
     <div id="screen-home" class="screen" role="main" aria-label="Pantalla de inicio">
-      <header class="app-header" role="banner">
+      <header class="app-header glass-header" role="banner">
         <div class="header-inner">
           <div class="header-logo" aria-hidden="true">
             <svg width="28" height="28" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -58,7 +69,7 @@
             </svg>
             <span>EcoScan</span>
           </div>
-          <button class="btn-icon" id="btn-stats" aria-label="Ver estadísticas">
+          <button class="btn-icon" id="btn-stats" aria-label="Ver mi progreso">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
             </svg>
@@ -66,7 +77,7 @@
         </div>
       </header>
 
-      <div class="home-content">
+      <div class="home-content" id="main-content">
         <section class="home-hero" aria-labelledby="hero-heading">
           <div class="hero-text">
             <div class="hero-badge">
@@ -89,6 +100,22 @@
             </div>
           </div>
         </section>
+
+        <!-- Tarjeta de nivel -->
+        <button class="level-widget" id="level-widget" aria-label="Ver mi progreso y nivel">
+          <div class="level-badge" id="home-level-badge" aria-hidden="true">1</div>
+          <div class="level-widget-info">
+            <div class="level-widget-top">
+              <span class="level-widget-title" id="home-level-title">Aprendiz verde</span>
+              <span class="level-widget-xp" id="home-level-xp">0 XP</span>
+            </div>
+            <div class="xp-track" aria-hidden="true">
+              <div class="xp-fill" id="home-xp-fill" style="width:0%"></div>
+            </div>
+            <span class="level-widget-next" id="home-level-next">Empieza a escanear para ganar XP</span>
+          </div>
+          <svg class="level-widget-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
 
         <button class="btn-scan-main" id="btn-scan" aria-label="Iniciar escaneo de residuo">
           <span class="btn-scan-icon" aria-hidden="true">
@@ -114,6 +141,17 @@
           <div class="stat-card">
             <span class="stat-number" id="stat-streak">0</span>
             <span class="stat-label">Días de<br>racha</span>
+          </div>
+        </section>
+
+        <!-- Desafío diario destacado -->
+        <section class="home-challenge" aria-labelledby="home-challenge-title">
+          <div class="home-challenge-head">
+            <h3 class="section-title" id="home-challenge-title">Desafío de hoy</h3>
+            <button class="link-btn" id="btn-all-challenges">Ver todos</button>
+          </div>
+          <div class="challenge-card" id="home-daily-challenge">
+            <div class="challenge-skeleton skeleton"></div>
           </div>
         </section>
 
@@ -148,12 +186,116 @@
         </section>
       </div>
 
-      <nav class="bottom-nav" role="navigation" aria-label="Navegación principal">
+      <nav class="bottom-nav glass-nav" role="navigation" aria-label="Navegación principal">
         <button class="nav-item active" data-screen="home" aria-label="Inicio" aria-current="page">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           <span>Inicio</span>
         </button>
-        <button class="nav-item" data-screen="scan" aria-label="Escanear">
+        <button class="nav-item" data-screen="dashboard" aria-label="Mi progreso">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <span>Progreso</span>
+        </button>
+        <button class="nav-item nav-item-scan" data-screen="scan" aria-label="Escanear">
+          <div class="nav-scan-btn" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </div>
+          <span>Escanear</span>
+        </button>
+        <button class="nav-item" data-screen="history" aria-label="Historial">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span>Historial</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- ===== PANTALLA: DASHBOARD / PROGRESO ===== -->
+    <div id="screen-dashboard" class="screen" role="main" aria-label="Mi progreso e impacto">
+      <header class="app-header glass-header" role="banner">
+        <div class="header-inner">
+          <h2 class="header-title">Mi progreso</h2>
+          <button class="btn-icon" id="btn-share-impact" aria-label="Compartir mi impacto">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="dashboard-content">
+        <!-- Tarjeta de nivel grande -->
+        <section class="level-hero" aria-labelledby="dash-level-title">
+          <div class="level-hero-glow" aria-hidden="true"></div>
+          <div class="level-hero-top">
+            <div class="level-ring" aria-hidden="true">
+              <svg viewBox="0 0 80 80" width="80" height="80">
+                <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="6"/>
+                <circle id="level-ring-fill" cx="40" cy="40" r="34" fill="none" stroke="#A5D6A7" stroke-width="6" stroke-linecap="round" stroke-dasharray="213.6" stroke-dashoffset="213.6" transform="rotate(-90 40 40)"/>
+              </svg>
+              <span class="level-ring-num" id="dash-level-num">1</span>
+            </div>
+            <div class="level-hero-info">
+              <span class="level-hero-label">Nivel actual</span>
+              <h3 class="level-hero-title" id="dash-level-title">Aprendiz verde</h3>
+              <span class="level-hero-xp" id="dash-level-xp">0 XP</span>
+            </div>
+          </div>
+          <div class="xp-track xp-track-lg" aria-hidden="true">
+            <div class="xp-fill" id="dash-xp-fill" style="width:0%"></div>
+          </div>
+          <span class="level-hero-next" id="dash-level-next">—</span>
+        </section>
+
+        <!-- Impacto ambiental -->
+        <section aria-labelledby="impact-title">
+          <h3 class="section-title section-title-pad" id="impact-title">Tu impacto acumulado</h3>
+          <div class="impact-grid" id="impact-grid">
+            <div class="impact-tile" style="--tile:#2E7D32;--tile-bg:#E8F5E9">
+              <span class="impact-tile-icon" aria-hidden="true">🌍</span>
+              <span class="impact-tile-value" id="impact-co2">0</span>
+              <span class="impact-tile-unit">kg de CO₂ evitado</span>
+            </div>
+            <div class="impact-tile" style="--tile:#1565C0;--tile-bg:#E3F2FD">
+              <span class="impact-tile-icon" aria-hidden="true">💧</span>
+              <span class="impact-tile-value" id="impact-water">0</span>
+              <span class="impact-tile-unit">litros de agua</span>
+            </div>
+            <div class="impact-tile" style="--tile:#558B2F;--tile-bg:#F1F8E9">
+              <span class="impact-tile-icon" aria-hidden="true">🌳</span>
+              <span class="impact-tile-value" id="impact-trees">0</span>
+              <span class="impact-tile-unit">árboles salvados</span>
+            </div>
+            <div class="impact-tile" style="--tile:#E65100;--tile-bg:#FFF3E0">
+              <span class="impact-tile-icon" aria-hidden="true">⚡</span>
+              <span class="impact-tile-value" id="impact-energy">0</span>
+              <span class="impact-tile-unit">kWh ahorrados</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Desafíos -->
+        <section aria-labelledby="challenges-title">
+          <h3 class="section-title section-title-pad" id="challenges-title">Desafíos activos</h3>
+          <div class="challenges-list" id="challenges-list" role="list"></div>
+        </section>
+
+        <!-- Logros -->
+        <section aria-labelledby="achievements-title">
+          <div class="achievements-head">
+            <h3 class="section-title section-title-pad" id="achievements-title">Logros</h3>
+            <span class="achievements-count" id="achievements-count">0 / 0</span>
+          </div>
+          <div class="achievements-grid" id="achievements-grid" role="list"></div>
+        </section>
+      </div>
+
+      <nav class="bottom-nav glass-nav" role="navigation" aria-label="Navegación principal">
+        <button class="nav-item" data-screen="home" aria-label="Inicio">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span>Inicio</span>
+        </button>
+        <button class="nav-item active" data-screen="dashboard" aria-label="Mi progreso" aria-current="page">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <span>Progreso</span>
+        </button>
+        <button class="nav-item nav-item-scan" data-screen="scan" aria-label="Escanear">
           <div class="nav-scan-btn" aria-hidden="true">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
           </div>
@@ -202,7 +344,7 @@
 
         <div class="scan-processing" id="scan-processing" aria-live="polite" aria-label="Procesando imagen" hidden>
           <div class="processing-ring" aria-hidden="true"></div>
-          <span>Analizando...</span>
+          <span id="processing-text">Analizando...</span>
         </div>
       </div>
 
@@ -257,6 +399,7 @@
             <span class="conf-pct" id="conf-pct">—</span>
           </div>
         </div>
+        <div class="xp-pop" id="xp-pop" aria-hidden="true">+10 XP</div>
       </div>
 
       <div class="result-body">
@@ -306,7 +449,7 @@
 
     <!-- ===== PANTALLA 4: HISTORIAL ===== -->
     <div id="screen-history" class="screen" role="main" aria-label="Historial de escaneos">
-      <header class="app-header" role="banner">
+      <header class="app-header glass-header" role="banner">
         <div class="header-inner">
           <h2 class="header-title">Mi historial</h2>
           <button class="btn-icon" id="btn-clear-history" aria-label="Limpiar historial">
@@ -317,19 +460,26 @@
 
       <div class="history-content">
         <div class="history-empty" id="history-empty" role="status">
-          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <p>Aún no has escaneado nada.</p>
+          <div class="empty-illustration" aria-hidden="true">
+            <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
+          <h3 class="empty-title">Tu historial está vacío</h3>
+          <p>Escanea tu primer residuo para empezar a construir tu impacto.</p>
           <button class="btn-primary" id="btn-go-scan">Escanear primer residuo</button>
         </div>
         <ul class="history-list" id="history-list" aria-label="Lista de residuos escaneados"></ul>
       </div>
 
-      <nav class="bottom-nav" role="navigation" aria-label="Navegación principal">
+      <nav class="bottom-nav glass-nav" role="navigation" aria-label="Navegación principal">
         <button class="nav-item" data-screen="home" aria-label="Inicio">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           <span>Inicio</span>
         </button>
-        <button class="nav-item" data-screen="scan" aria-label="Escanear">
+        <button class="nav-item" data-screen="dashboard" aria-label="Mi progreso">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <span>Progreso</span>
+        </button>
+        <button class="nav-item nav-item-scan" data-screen="scan" aria-label="Escanear">
           <div class="nav-scan-btn" aria-hidden="true">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
           </div>
@@ -342,12 +492,48 @@
       </nav>
     </div>
 
+    <!-- ===== MODAL: SUBIDA DE NIVEL / LOGRO ===== -->
+    <div id="celebration-modal" class="celebration-modal" hidden role="dialog" aria-modal="true" aria-labelledby="celebration-title">
+      <div class="celebration-backdrop" id="celebration-backdrop" aria-hidden="true"></div>
+      <div class="celebration-card" role="document">
+        <div class="celebration-icon" id="celebration-icon" aria-hidden="true">🎉</div>
+        <span class="celebration-eyebrow" id="celebration-eyebrow">¡Subiste de nivel!</span>
+        <h2 class="celebration-title" id="celebration-title">Nivel 2</h2>
+        <p class="celebration-desc" id="celebration-desc">Reciclador novato</p>
+        <button class="btn-primary btn-full" id="btn-celebration-close">¡Genial!</button>
+      </div>
+    </div>
+
+    <!-- ===== BANNER: INSTALAR PWA ===== -->
+    <div id="install-banner" class="install-banner" hidden role="region" aria-label="Instalar aplicación">
+      <div class="install-icon" aria-hidden="true">
+        <img src="assets/icon-192.png" alt="" width="40" height="40">
+      </div>
+      <div class="install-text">
+        <strong>Instala EcoScan</strong>
+        <span>Accede más rápido y úsala sin conexión.</span>
+      </div>
+      <button class="install-btn" id="btn-install">Instalar</button>
+      <button class="install-dismiss" id="btn-install-dismiss" aria-label="Cerrar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- ===== OFFLINE INDICATOR ===== -->
+    <div id="offline-indicator" class="offline-indicator" hidden role="status" aria-live="polite">
+      Sin conexión · modo offline
+    </div>
+
+    <!-- ===== CONFETTI ===== -->
+    <canvas id="confetti-canvas" class="confetti-canvas" aria-hidden="true"></canvas>
+
     <!-- ===== TOAST NOTIFICATIONS ===== -->
     <div id="toast-container" aria-live="polite" aria-atomic="true" role="status"></div>
 
   </div><!-- /#app -->
 
   <script src="js/data.js"></script>
+  <script src="js/gamification.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/scanner.js"></script>
   <script src="js/ui.js"></script>
