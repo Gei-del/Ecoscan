@@ -1294,6 +1294,8 @@ body {
   flex-direction: column;
   gap: 8px;
 }
+/* Evita que los hijos de un contenedor flex-column scrollable se compriman bajo su contenido */
+.dashboard-content > * { flex-shrink: 0; }
 .section-title-pad { padding: 0 20px; margin-bottom: 10px; margin-top: 6px; }
 
 .challenges-list { display: flex; flex-direction: column; gap: 10px; padding: 0 20px; }
@@ -1446,6 +1448,8 @@ body {
   justify-content: center;
   padding: 28px;
 }
+/* El atributo [hidden] debe ganar sobre display:flex para no bloquear clics */
+.celebration-modal[hidden] { display: none; }
 .celebration-backdrop {
   position: absolute; inset: 0;
   background: rgba(15,30,18,.55);
